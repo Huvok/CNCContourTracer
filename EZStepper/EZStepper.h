@@ -9,6 +9,9 @@
 //                                                          //PURPOSE: Library for easy control of stepper motors
 //                                                          //    (targeted and tested in four-bit drivers).
 
+//***If you are working with an old arduino IDE initialize the private variables in the constructor****
+
+
 //======================================================================================================================
 class EZStepper
 {

@@ -1,5 +1,5 @@
-#include <EZStepper.h>
-#include <Math.h>
+#include "EZStepper.h"
+#include <math.h>
 
 //                                              //Constructor:
 //                                              //    1.  Steps per revolution
@@ -21,6 +21,13 @@ typedef struct point Point;
 int INT_X_SENSIVITY = 100;
 int INT_Y_SENSIVITY = 100;
 
+//variables de transformacion
+String datos = "9,10,9,11,9,12,9,13,10,13,11,13,12,13,12,12,12,11,12,10,11,10,10,10,9,10";
+int numOfPoints = 13;
+int count = 0;
+String digito = "";
+//-----------------
+
 void setup() 
 {
   Serial.begin(9600);
@@ -29,37 +36,13 @@ void setup()
   pinMode(intYButtonPin, INPUT);
   stepperX.subSetStatesPerSec(100);
   stepperY.subSetStatesPerSec(100);
-  Point point1, point2, point3, point4, point5, point6, point7, point8, point9, point10, point11, point12, point13;
-  point1.intX = 9;
-  point1.intY = 10;
-  point2.intX = 9;
-  point2.intY = 11;
-  point3.intX = 9;
-  point3.intY = 12;
-  point4.intX = 9;
-  point4.intY = 13;
-  point5.intX = 10;
-  point5.intY = 13;
-  point6.intX = 11;
-  point6.intY = 13;
-  point7.intX = 12;
-  point7.intY = 13;
-  point8.intX = 12;
-  point8.intY = 12;
-  point9.intX = 12;
-  point9.intY = 11;
-  point10.intX = 12;
-  point10.intY = 10;
-  point11.intX = 11;
-  point11.intY = 10;
-  point12.intX = 10;
-  point12.intY = 10;
-  point13.intX = 9;
-  point13.intY = 10;
-
+  
+  Point pointsArr[numOfPoints];
+  getCoord(pointsArr);
+  Serial.print ("volvi");
   stepperX.subSetDirection(stepperX.LEFT);
   stepperY.subSetDirection(stepperY.LEFT);
-  while (!(digitalRead(intXButtonPin) == HIGH))
+ /* while (!(digitalRead(intXButtonPin) == HIGH))
   {
     stepperX.subMoveBySteps(1);
   }
@@ -67,10 +50,9 @@ void setup()
   while (!(digitalRead(intYButtonPin) == HIGH))
   {
     stepperY.subMoveBySteps(1);
-  }
+  }*/
 
-  Point arrpoint[] = { point1, point2, point3, point4, point5, point6, point7, point8, point9, point10, point11, point12, point13 };
-  subTracePoints(arrpoint);
+  subTracePoints(pointsArr);
 }
 
 void loop() 
@@ -168,5 +150,28 @@ void subTraceToPoint(Point pointNext)
 
   intCurrentX = pointNext.intX;
   intCurrentY = pointNext.intY;
+}
+
+//obtengo coordenadas del string de datos
+
+void getCoord(Point points[]){
+    while (datos.length() > 0){
+      while (isDigit(datos.charAt(0))){
+        digito += datos.charAt(0);
+        datos.remove(0,1);
+      }
+      points[count].intX = digito.toInt(); 
+      datos.remove(0,1);
+      digito = "";
+    
+      while (isDigit(datos.charAt(0))){
+        digito += datos.charAt(0);
+        datos.remove(0,1);
+      }
+      points[count].intY = digito.toInt(); 
+      datos.remove(0,1);
+      digito = "";
+    count += 1;
+  }
 }
 

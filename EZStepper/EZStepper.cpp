@@ -20,6 +20,11 @@ EZStepper::EZStepper(
     int intPinC,
     int intPinD)
 {
+    //uncomment if you are using an old IDE
+    /*numCurrentDegrees = 0;
+    state = _0001;
+    direction = RIGHT;
+    intStatesPerSec = 8;*/
     this->intPinA = intPinA;
     this->intPinB = intPinB;
     this->intPinC = intPinC;
@@ -296,4 +301,4 @@ void EZStepper::subMove()
     }
 }
 
-//======================================================================================================================
+//=====================================================================================================================
