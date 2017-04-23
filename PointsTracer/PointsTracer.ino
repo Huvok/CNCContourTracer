@@ -58,17 +58,17 @@ typedef struct point Point;
 
 //                                                      //The biggest these two values are, the more steps a
 //                                                      //    coordinate point unit is worth.
-int INT_X_SENSIVITY = 100;
-int INT_Y_SENSIVITY = 100;
+int INT_X_SENSIVITY = .05;
+int INT_Y_SENSIVITY = .06667;
 //                                                      //Square
-String datos = "9,10,9,11,9,12,9,13,10,13,11,13,12,13,12,12,12,11,12,10,11,10,10,10,9,10";
-int intPointsNumber = 13;
+//String datos = "9,10,9,11,9,12,9,13,10,13,11,13,12,13,12,12,12,11,12,10,11,10,10,10,9,10";
+//int intPointsNumber = 13;
 //                                                      //Triangle
 //String datos = "15,14,13,12,11,10,12,10,13,10,15,10,16,10,17,10,19,10,17,12,16,13,15,14";
 //int intPointsNumber = 12;
 //                                                      //GetFromSerial
-//String datos;
-//int intPointsNumber;
+String datos;
+int intPointsNumber;
 bool start = false;
 //
 
@@ -79,7 +79,8 @@ String digito = "";
 //                                                      //VOID SETUP
 void setup() 
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  Serial1.begin(115200);
 
 //                                                      //LCD start
   lcd.begin(16, 2);
@@ -103,9 +104,13 @@ void setup()
   stepperX.subSetStatesPerSec(90);
   stepperY.subSetStatesPerSec(90);
   
-  //GetData();
-  //Serial.println(datos);  
-  //Serial.println(intPointsNumber); 
+  GetData();
+  
+  //                                                    //We are receiving our data like "9,2,1,4,", so we need to
+  //                                                    //    delete the final comma.
+  datos.substring(0, datos.length() - 2);
+  Serial.println(datos);
+  Serial.println(intPointsNumber);
   Point pointsArr[intPointsNumber];
   getCoord(pointsArr);
 
@@ -134,6 +139,7 @@ void setup()
 //-----------------------------------------------------------------------------------------------------------------
 //                                                      //VOID SETUP METHODS
 
+//-----------------------------------------------------------------------------------------------------------------
 //                                                      //Obtain the coordinates of the data String.
 void getCoord(Point points[])
 {
@@ -165,10 +171,18 @@ void getCoord(Point points[])
 //-----------------------------------------------------------------------------------------------------------------
 void subTracePoints(Point arrpoint[])
 {
+  lcd.clear();
+  lcd.print("YENDO AL PUNTO INICIAL...");
+  lcd.setCursor(0,1);
+  lcd.write(byte(0));
   //                                                      //We must move to the first point before droping the
   //                                                      //    marker.
   subMoveToFirstPoint(arrpoint[0]);
 
+  lcd.clear();
+  lcd.print("DIBUJANDO...");
+  lcd.setCursor(0,1);
+  lcd.write(byte(0));
   //                                                      //Trace all the coordinates.
   for (int intI = 1; intI < intPointsNumber; intI++)
   {
@@ -195,6 +209,11 @@ void subTracePoints(Point arrpoint[])
     subTraceToPoint(arrpoint[intI]);
   }
   servo.write(8);
+
+  lcd.clear();
+  lcd.print("TERMINÉ");
+  lcd.setCursor(0,1);
+  lcd.write(byte(0));
 }
 
 //-----------------------------------------------------------------------------------------------------------------
@@ -310,8 +329,9 @@ void GetData(){
   bool start = false;
   GetTam();
   while (flag){
-    if (Serial.available()) { 
-      char c = Serial.read();
+    if (Serial1.available()) 
+    { 
+      char c = Serial1.read();
       datos += c;
         if (c == '&') {
           flag = false;
@@ -326,8 +346,9 @@ void GetTam(){
   bool flag = true;
   String tam;
   while (flag){
-    if (Serial.available()) { 
-      char c = Serial.read();
+    if (Serial1.available()) { 
+      char c = Serial1.read();
+      Serial.println(c);
       if (start) {
         tam += c;
         if (c == ',') {
