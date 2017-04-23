@@ -3,17 +3,23 @@
 #include <Servo.h>
 #include <LiquidCrystal.h>
 
-//                                              //Constructor:
+//                                              //AUTHORS: Hugo García, Efrén Pérez
+//                                              //DATE: 4/20/2017
+//                                              //PURPOSE: Arduino support for CNC contour tracer.
+
+//===========================================================================================================
+//                                              //EZStepper constructor:
 //                                              //    1. Steps per revolution
 //                                              //    2. to 5. Driver pins.
 EZStepper stepperY(2094, 8, 9, 10 , 11);
-EZStepper stepperX(2094, 4, 5, 6, 7);
+EZStepper stepperX(2094, 22, 24, 26, 28);
 Servo servo;
 int intYButtonPin = 39;
 int intXButtonPin = 41;
 int intCurrentX = 0;
 int intCurrentY = 0;
-// display
+
+//                                              //LCD Display
 LiquidCrystal lcd(43, 45, 47, 49, 51, 53); 
 //RS=43  E=45  D4=47 D5=49 D6=51 D7=53
 byte heart[8] = {
@@ -26,6 +32,7 @@ byte heart[8] = {
   0b00100,
   0b00000
 };
+
 byte smiley[8] = {
   0b00000,
   0b01010,
@@ -37,7 +44,7 @@ byte smiley[8] = {
   0b00000
 };
 
-//
+//                                                      //Points in X, Y coordinates
 struct point
 {
    int intX;
@@ -48,6 +55,9 @@ typedef struct point Point;
 
 //===================================================================================================================
 //                                                      //GLOBAL VARIABLES
+
+//                                                      //The biggest these two values are, the more steps a
+//                                                      //    coordinate point unit is worth.
 int INT_X_SENSIVITY = 100;
 int INT_Y_SENSIVITY = 100;
 //                                                      //Square
@@ -71,7 +81,7 @@ void setup()
 {
   Serial.begin(9600);
 
-//  -----
+//                                                      //LCD start
   lcd.begin(16, 2);
 
   lcd.createChar(0, heart);
@@ -82,14 +92,14 @@ void setup()
   lcd.setCursor(0,1); 
   lcd.write(byte(0));
   delay(1000);
-// -----
   
   servo.attach(2);
   servo.write(8);
-  //                                                    //Set the velocity to 100 half-steps per second.
+  
   pinMode(intXButtonPin, INPUT);
   pinMode(intYButtonPin, INPUT);
 
+  //                                                    //Set the velocity to 90 half-steps per second.
   stepperX.subSetStatesPerSec(90);
   stepperY.subSetStatesPerSec(90);
   
@@ -98,7 +108,9 @@ void setup()
   //Serial.println(intPointsNumber); 
   Point pointsArr[intPointsNumber];
   getCoord(pointsArr);
-  
+
+  //                                                    //Move until the buttons are pressed, so we can decide
+  //                                                    //    where is the (0, 0) coordinate.
   stepperX.subSetDirection(stepperX.LEFT);
   stepperY.subSetDirection(stepperY.LEFT);
   while (!(digitalRead(intXButtonPin) == HIGH))
@@ -110,13 +122,13 @@ void setup()
   {
     stepperY.subMoveBySteps(1);
   }
+  
   lcd.clear();
   lcd.print("ESTOY LISTO");
   lcd.setCursor(0,1);
   lcd.write(byte(0));
   delay(1000); 
   subTracePoints(pointsArr);
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------
@@ -188,21 +200,27 @@ void subTracePoints(Point arrpoint[])
 //-----------------------------------------------------------------------------------------------------------------
 void subMoveToFirstPoint(Point pointFirst)
 {
+  //                                                  //The first point will be always be at (0,0) or to the
+  //                                                  //    right direction of each stepper motor.
   stepperY.subSetDirection(stepperY.RIGHT);
   stepperX.subSetDirection(stepperX.RIGHT);
   stepperX.subMoveBySteps(pointFirst.intX * INT_X_SENSIVITY);
   stepperY.subMoveBySteps(pointFirst.intY * INT_Y_SENSIVITY);
   intCurrentX = pointFirst.intX;
   intCurrentY = pointFirst.intY;
+
+  //                                                  //Get the marker down.
   servo.write(3);
-  
 }
 
-//----------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------
 void subTraceToPoint(Point pointNext)
 {
+  //                                                  //Get the difference from the current point to the next one.
   int intNextX = pointNext.intX - intCurrentX;
   int intNextY = pointNext.intY - intCurrentY;
+
+  //                                                  //Correction for negative differences.
   if (intNextX < 0)
   {
     intNextX *= -1;
@@ -213,9 +231,13 @@ void subTraceToPoint(Point pointNext)
     intNextY *= -1;
   }
 
+  //                                                  //The "sensivity" is the ratio of how many steps a coordinate
+  //                                                  //    unit is worth.
   int intXLeft = intNextX * INT_X_SENSIVITY;
   int intYLeft = intNextY * INT_Y_SENSIVITY;
   int intDiagonalRatio = 1;
+
+  //                                                  //If it is a diagonal line, we must get a ratio to get it right.
   if (intXLeft > 0 && 
       intYLeft > 0)
   {
@@ -229,6 +251,8 @@ void subTraceToPoint(Point pointNext)
     }
   }
 
+  //                                                  //Move until there are no steps left. The main if is to get if the
+  //                                                  //    diagonal ratio goes in favor of the X or the Y axis.
   if (intXLeft > intYLeft)
   {
     while (intXLeft > 0 ||
