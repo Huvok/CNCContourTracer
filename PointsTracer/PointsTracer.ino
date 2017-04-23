@@ -1,6 +1,7 @@
 #include "EZStepper.h"
 #include <math.h>
 #include <Servo.h>
+#include <LiquidCrystal.h>
 
 //                                              //Constructor:
 //                                              //    1. Steps per revolution
@@ -8,11 +9,35 @@
 EZStepper stepperY(2094, 8, 9, 10 , 11);
 EZStepper stepperX(2094, 4, 5, 6, 7);
 Servo servo;
-int intYButtonPin = 2;
-int intXButtonPin = 3;
+int intYButtonPin = 39;
+int intXButtonPin = 41;
 int intCurrentX = 0;
 int intCurrentY = 0;
+// display
+LiquidCrystal lcd(43, 45, 47, 49, 51, 53); 
+//RS=43  E=45  D4=47 D5=49 D6=51 D7=53
+byte heart[8] = {
+  0b00000,
+  0b01010,
+  0b11111,
+  0b11111,
+  0b11111,
+  0b01110,
+  0b00100,
+  0b00000
+};
+byte smiley[8] = {
+  0b00000,
+  0b01010,
+  0b01010,
+  0b01010,
+  0b00000,
+  0b10001,
+  0b01110,
+  0b00000
+};
 
+//
 struct point
 {
    int intX;
@@ -26,14 +51,14 @@ typedef struct point Point;
 int INT_X_SENSIVITY = 100;
 int INT_Y_SENSIVITY = 100;
 //                                                      //Square
-//String datos = "9,10,9,11,9,12,9,13,10,13,11,13,12,13,12,12,12,11,12,10,11,10,10,10,9,10";
-//int intPointsNumber = 13;
+String datos = "9,10,9,11,9,12,9,13,10,13,11,13,12,13,12,12,12,11,12,10,11,10,10,10,9,10";
+int intPointsNumber = 13;
 //                                                      //Triangle
 //String datos = "15,14,13,12,11,10,12,10,13,10,15,10,16,10,17,10,19,10,17,12,16,13,15,14";
 //int intPointsNumber = 12;
 //                                                      //GetFromSerial
-String datos;
-int intPointsNumber;
+//String datos;
+//int intPointsNumber;
 bool start = false;
 //
 
@@ -45,7 +70,21 @@ String digito = "";
 void setup() 
 {
   Serial.begin(9600);
-  servo.attach(12);
+
+//  -----
+  lcd.begin(16, 2);
+
+  lcd.createChar(0, heart);
+  lcd.createChar(1, smiley);  
+  lcd.setCursor(0,0);
+  
+  lcd.print("My Guedea ");  
+  lcd.setCursor(0,1); 
+  lcd.write(byte(0));
+  delay(1000);
+// -----
+  
+  servo.attach(2);
   servo.write(8);
   //                                                    //Set the velocity to 100 half-steps per second.
   pinMode(intXButtonPin, INPUT);
@@ -54,9 +93,9 @@ void setup()
   stepperX.subSetStatesPerSec(90);
   stepperY.subSetStatesPerSec(90);
   
-  GetData();
-  Serial.println(datos);  
-  Serial.println(intPointsNumber); 
+  //GetData();
+  //Serial.println(datos);  
+  //Serial.println(intPointsNumber); 
   Point pointsArr[intPointsNumber];
   getCoord(pointsArr);
   
@@ -71,7 +110,11 @@ void setup()
   {
     stepperY.subMoveBySteps(1);
   }
- 
+  lcd.clear();
+  lcd.print("ESTOY LISTO");
+  lcd.setCursor(0,1);
+  lcd.write(byte(0));
+  delay(1000); 
   subTracePoints(pointsArr);
 
 }
