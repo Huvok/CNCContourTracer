@@ -26,11 +26,16 @@ typedef struct point Point;
 int INT_X_SENSIVITY = 100;
 int INT_Y_SENSIVITY = 100;
 //                                                      //Square
-String datos = "9,10,9,11,9,12,9,13,10,13,11,13,12,13,12,12,12,11,12,10,11,10,10,10,9,10";
-int intPointsNumber = 13;
+//String datos = "9,10,9,11,9,12,9,13,10,13,11,13,12,13,12,12,12,11,12,10,11,10,10,10,9,10";
+//int intPointsNumber = 13;
 //                                                      //Triangle
-//String datos = "9,10,12,15,15,10,9,10";
-// intPointsNumber 4;
+//String datos = "15,14,13,12,11,10,12,10,13,10,15,10,16,10,17,10,19,10,17,12,16,13,15,14";
+//int intPointsNumber = 12;
+//                                                      //GetFromSerial
+String datos;
+int intPointsNumber;
+bool start = false;
+//
 
 int count = 0;
 String digito = "";
@@ -41,17 +46,20 @@ void setup()
 {
   Serial.begin(9600);
   servo.attach(12);
-  servo.write(21);
-  delay(1000);
+  servo.write(8);
   //                                                    //Set the velocity to 100 half-steps per second.
   pinMode(intXButtonPin, INPUT);
   pinMode(intYButtonPin, INPUT);
 
-  stepperX.subSetStatesPerSec(100);
-  stepperY.subSetStatesPerSec(100);
+  stepperX.subSetStatesPerSec(90);
+  stepperY.subSetStatesPerSec(90);
   
+  GetData();
+  Serial.println(datos);  
+  Serial.println(intPointsNumber); 
   Point pointsArr[intPointsNumber];
   getCoord(pointsArr);
+  
   stepperX.subSetDirection(stepperX.LEFT);
   stepperY.subSetDirection(stepperY.LEFT);
   while (!(digitalRead(intXButtonPin) == HIGH))
@@ -63,8 +71,9 @@ void setup()
   {
     stepperY.subMoveBySteps(1);
   }
-
+ 
   subTracePoints(pointsArr);
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------
@@ -130,19 +139,20 @@ void subTracePoints(Point arrpoint[])
     
     subTraceToPoint(arrpoint[intI]);
   }
+  servo.write(8);
 }
 
 //-----------------------------------------------------------------------------------------------------------------
 void subMoveToFirstPoint(Point pointFirst)
 {
- 
   stepperY.subSetDirection(stepperY.RIGHT);
   stepperX.subSetDirection(stepperX.RIGHT);
   stepperX.subMoveBySteps(pointFirst.intX * INT_X_SENSIVITY);
   stepperY.subMoveBySteps(pointFirst.intY * INT_Y_SENSIVITY);
   intCurrentX = pointFirst.intX;
   intCurrentY = pointFirst.intY;
-   servo.write(19);
+  servo.write(3);
+  
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -224,4 +234,43 @@ void loop()
   
 }
 
+//==================================================================================================
+//                                              //Get datos
+//formato datos//
+//  &tam,x1,y1,x2,y2,.......,xn,yn&"
+void GetData(){
+  bool flag = true;
+  bool start = false;
+  GetTam();
+  while (flag){
+    if (Serial.available()) { 
+      char c = Serial.read();
+      datos += c;
+        if (c == '&') {
+          flag = false;
+          datos.remove(datos.length()-1);
+        }
+      }
+  }
+}
+//==================================================================================================
+
+void GetTam(){
+  bool flag = true;
+  String tam;
+  while (flag){
+    if (Serial.available()) { 
+      char c = Serial.read();
+      if (start) {
+        tam += c;
+        if (c == ',') {
+          flag = false;
+          datos.remove(datos.length()-1);
+        }
+      }
+      if (c == '&') {start = true;}
+    }
+  }
+  intPointsNumber = tam.toInt();
+}
 //==================================================================================================
