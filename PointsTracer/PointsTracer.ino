@@ -328,7 +328,7 @@ void GetData(){
   bool flag = true;
   bool start = false;
   GetTam();
-  while (flag){
+  for (int i = 0; i < (tam-2)*2;) {
     if (Serial1.available()) 
     { 
       char c = Serial1.read();
@@ -337,6 +337,7 @@ void GetData(){
           flag = false;
           datos.remove(datos.length()-1);
         }
+        if (c == ',') { i += 1};
       }
   }
 }
