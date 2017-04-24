@@ -211,7 +211,7 @@ void subTracePoints(Point arrpoint[])
   servo.write(8);
 
   lcd.clear();
-  lcd.print("TERMINÉ");
+  lcd.print("TERMINE");
   lcd.setCursor(0,1);
   lcd.write(byte(0));
 }
